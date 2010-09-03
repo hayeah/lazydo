@@ -1,0 +1,16 @@
+{ "name" : "lazydo"
+  , "description" : "composable lazy objects",
+  , "version": "0.0.1",
+  , "author" : "Howard Yeh <hayeah@gmail.com>"
+  , "repository" :
+  { "type" : "git"
+    , "url" : "https://hayeah@github.com/hayeah/lazydo.git"
+  }
+  , "main" : "./lazy"
+  , "engines": [ "node" ]
+  , "licenses" :
+  [ { "type" : "MIT"
+      , "url" : "http://github.com/jed/fab/blob/master/LICENSE.txt"
+    }
+  ]
+}
