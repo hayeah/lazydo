@@ -4,7 +4,9 @@ function p(o) {
 }
 
 var Do = exports.Do = function() {
-  if(arguments[0].constructor === Function && arguments.length == 1) {
+  if(arguments[0] &&
+     arguments[0].constructor === Function
+     && arguments.length == 1) {
     return Lazy(arguments[0]);
   } else {
     var doObj = new DoObject(arguments);
@@ -85,7 +87,7 @@ function DoObject(args) {
 // lazy
 DoObject.prototype = {
   init: function(args) {
-    if(args[0].constructor == Function) {
+    if(args[0] && args[0].constructor == Function) {
       this.fn = args[0];
       this.values = [].slice.call(args,1);
     } else {
@@ -108,15 +110,37 @@ DoObject.prototype = {
       delete this['results'];
       if(this.fn) {
         try {
-          this.fn_result = this.fn.apply(this,this.values);
+          var result = this.fn.apply(this,this.values);
+          if(result &&
+             (result.constructor === Lazy ||
+              result.constructor === Do)) {
+            // if the result of the application is another lazy value, evaluate recursively
+            result(function(result) {
+              if(this.error) {
+                self.raise(this.error,callback);
+              } else {
+                self.fn_result = result;
+                self.complete(callback);
+              }
+            });
+          } else {
+            // return result of function application
+            this.fn_result = result;
+            self.complete(callback);
+          }
         } catch(error) {
           self.raise(error,callback);
         }
+      } else {
+        // just returning the evaluated values
+        self.complete(callback);
       }
-      this.complete(callback);
     } else {
       var next = this.values.shift();
-      if(next.constructor === Lazy) {
+      if(next == undefined || next == null) {
+        this.results.push(next);
+        this.eval(callback);
+      } else if(next.constructor === Lazy) {
         // force the lazy value
         next(function(value) {
           if(this.error) {

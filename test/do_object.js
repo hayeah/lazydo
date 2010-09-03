@@ -53,6 +53,24 @@ module.exports = {
     });
   },
 
+  'recursively evaluates lazy values on function application': function(a) {
+    Do(function(n) {
+      return Do(1+n);
+    },1)(function(n) {
+      a.eql(n,2);
+    });
+  },
+
+  'recursively evaluates a lazy values that raises': function(a) {
+    Do(function(n) {
+      return Do(function($) {
+        $.raise("error");
+      });
+    },1)(function(n) {
+      a.eql(this.error,"error");
+    });
+  },
+
   'returns eager values as they are': function(a) {
     Do(1,2)(function(x,y) {
       a.eql(x,1);
