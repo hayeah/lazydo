@@ -3,7 +3,11 @@ function p(o) {
   sys.puts(sys.inspect(o));
 }
 
-var Do = exports.Do = function() {
+module.exports = {
+  'Do': Do
+}
+
+function Do() {
   if(arguments[0] &&
      arguments[0].constructor === Function
      && arguments.length == 1) {
@@ -172,7 +176,7 @@ DoObject.prototype = {
 
   raise: function(error,callback) {
     this.error = error;
-    this.complete();
+    this.complete(callback);
   },
   
   complete: function(callback) {
