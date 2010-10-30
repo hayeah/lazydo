@@ -5,6 +5,8 @@
 # If(test,b,c)
 # Unless(test,b,c)
 # If(Not(test),b,c)
+# Or
+# And
 
 # Let({a: v1, b: v2}) () -> @a == v1; @b == v2
 # Let(a,b,c,d) (a,b,c,d) -> ...
@@ -83,6 +85,13 @@ class Do extends LazyEval
         @value = result
         @eval()
 
+class Not extends LazyEval
+  constructor: (@value) ->
+    super
+  eval: () ->
+    @force @value, (result) =>
+      @return !result
+
 class If extends LazyEval
   constructor: (@test,@a,@b) ->
     super
@@ -129,3 +138,5 @@ exports.LazyObject = Let
 exports.Lazy = wrap(Lazy)
 exports.If = wrap(If)
 exports.Do = wrap(Do)
+exports.Not = wrap(Not)
+
