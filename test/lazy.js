@@ -1,7 +1,9 @@
 (function() {
   var LO, lazy, p, sys;
-  lazy = require("../lib/lazy");
-  LO = lazy.LazyObject;
+  lazy = require("../lib/do");
+  LO = function(thunk) {
+    return new lazy.LazyObject(thunk);
+  };
   sys = require("sys");
   p = function(o) {
     return sys.puts(sys.inspect(o));

@@ -8,14 +8,16 @@ class LazyObject
       @callbacks.push(callback)
       unless @in_progress
         @in_progress = true
-        @thunk(this)
+        @eval()
+  eval: () ->
+    @thunk(this)
   return: (result) ->
     @result = result
-    @_complete()
+    @complete()
   raise: (error) ->
     @error = error
-    @_complete()
-  _complete: () ->
+    @complete()
+  complete: () ->
     @done = true
     for callback in @callbacks
       callback(@error,@result)

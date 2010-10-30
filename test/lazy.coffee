@@ -1,5 +1,5 @@
-lazy = require("../lib/lazy")
-LO = lazy.LazyObject
+lazy = require("../lib/do")
+LO = (thunk) -> new lazy.LazyObject(thunk)
 
 sys = require("sys")
 p = (o) ->
