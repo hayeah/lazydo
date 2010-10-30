@@ -21,7 +21,7 @@ sys = require("sys")
 p = (o) ->
   sys.puts(sys.inspect(o))
 
-secret_tag_value = () ->
+secret_tag_value = {}
 loop_breaker = {}
 
 class LazyEval
