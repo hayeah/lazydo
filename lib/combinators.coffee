@@ -22,6 +22,7 @@ p = (o) ->
   sys.puts(sys.inspect(o))
 
 secret_tag_value = () ->
+loop_breaker = {}
 
 class LazyEval
   constructor: () ->
@@ -61,6 +62,17 @@ class LazyEval
       callback(object)
   isLazy: (object) ->
     object? && object.lazy == secret_tag_value
+  each: (args,callback,i) ->
+    return(@each(args,callback,0)) unless i?
+    if i < @args.length
+      @force args[i], (result) =>
+        try
+          callback(result)
+          @each(args,callback,i+1)
+        catch e
+          throw(e) unless e == loop_breaker
+  break: () ->
+    throw(loop_breaker)
   eval: () ->
     # to override
 
@@ -103,23 +115,10 @@ class If extends LazyEval
         @force @b, (result) =>
           @return result
 
-loop_breaker = {}
-
 class Or extends LazyEval
   constructor: (args...) ->
     @args = args
     super
-  each: (args,callback,i) ->
-    return(@each(args,callback,0)) unless i?
-    if i < @args.length
-      @force args[i], (result) =>
-        try
-          callback(result)
-          @each(args,callback,i+1)
-        catch e
-          throw(e) unless e == loop_breaker
-  break: () ->
-    throw(loop_breaker)
   eval: () ->
     @value = false
     @each @args, (result) =>
