@@ -86,8 +86,7 @@ class Do extends LazyEval
         @eval()
 
 class Not extends LazyEval
-  constructor: (@value) ->
-    super
+  constructor: (@value) -> super
   eval: () ->
     @force @value, (result) =>
       @return !result
@@ -104,6 +103,30 @@ class If extends LazyEval
         @force @b, (result) =>
           @return result
 
+loop_breaker = {}
+
+class Or extends LazyEval
+  constructor: (args...) ->
+    @args = args
+    super
+  each: (args,callback,i) ->
+    return(@each(args,callback,0)) unless i?
+    if i < @args.length
+      @force args[i], (result) =>
+        try
+          callback(result)
+          @each(args,callback,i+1)
+        catch e
+          throw(e) unless e == loop_breaker
+  break: () ->
+    throw(loop_breaker)
+  eval: () ->
+    @value = false
+    @each @args, (result) =>
+      if result
+        @value = result
+        @break()
+    @return @value
 
 class Let extends LazyEval
   constructor: (@args) ->
@@ -139,4 +162,5 @@ exports.Lazy = wrap(Lazy)
 exports.If = wrap(If)
 exports.Do = wrap(Do)
 exports.Not = wrap(Not)
+exports.Or = wrap(Or)
 
