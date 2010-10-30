@@ -85,17 +85,12 @@ class Lazy extends LazyEval
 
 class Do extends LazyEval
   constructor: (args...) ->
-    @values = []
     @args = args
     super
   eval: () ->
-    if @args.length == 0
-      @return @value
-    else
-      arg = @args.shift()
-      @force arg, (result) =>
-        @value = result
-        @eval()
+    @each @args, (result) ->
+      @value = result
+
 
 class Not extends LazyEval
   constructor: (@value) -> super
