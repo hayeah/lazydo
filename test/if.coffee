@@ -2,10 +2,8 @@ If = require("../lib/combinators").If
 L = require("../lib/combinators").Lazy
 
 sys = require("sys")
-
 p = (o) ->
   sys.puts(sys.inspect(o))
-
 
 fail = L ($) -> $.raise("error")
 

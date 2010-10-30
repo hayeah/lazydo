@@ -4,6 +4,7 @@
 # Call(fn,a,b,c)
 # If(test,b,c)
 # Unless(test,b,c)
+# If(Not(test),b,c)
 
 # Let({a: v1, b: v2}) () -> @a == v1; @b == v2
 # Let(a,b,c,d) (a,b,c,d) -> ...
@@ -46,24 +47,41 @@ class LazyEval
     @callbacks = undefined
   # this is an internal helper
   force: (object,callback) ->
-    if object? && object.lazy == secret_tag_value
+    if @isLazy(object)
       # this is a lazy value created by lazydo
       object (error,result) =>
         if error
           @raise error
         else
-          callback(result)
+          # if result is lazy, it will be recursively evaled
+          @force result, callback
     else
       callback(object)
-
+  isLazy: (object) ->
+    object? && object.lazy == secret_tag_value
   eval: () ->
     # to override
+
 
 class Lazy extends LazyEval
   constructor: (@thunk) ->
     super
   eval: () ->
     @thunk(this)
+
+class Do extends LazyEval
+  constructor: (args...) ->
+    @values = []
+    @args = args
+    super
+  eval: () ->
+    if @args.length == 0
+      @return @value
+    else
+      arg = @args.shift()
+      @force arg, (result) =>
+        @value = result
+        @eval()
 
 class If extends LazyEval
   constructor: (@test,@a,@b) ->
@@ -110,3 +128,4 @@ exports.LazyObject = Let
 
 exports.Lazy = wrap(Lazy)
 exports.If = wrap(If)
+exports.Do = wrap(Do)
