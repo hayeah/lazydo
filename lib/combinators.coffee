@@ -45,9 +45,12 @@ class LazyEval
   complete: () ->
     @done = true
     for callback in @callbacks
-      callback(@error,@result)
+      @report(callback)
     @in_progress = undefined
     @callbacks = undefined
+  # override this to report back to callback in a different way
+  report: (callback) ->
+    callback(@error,@result)
   # this is an internal helper
   force: (object,callback) ->
     if @isLazy(object)
@@ -134,18 +137,23 @@ class And extends LazyEval
     @return @value unless @error?
 
 class Let extends LazyEval
-  constructor: (@args) ->
+  constructor: (args...) ->
+    @args = args
     super
   eval: () ->
-    @values = []
-    eval_all(callback,0)
-  eval_all: (callback,i) ->
-    if i > args.length
-      @return(@values)
+    @bindings = {}
+    @eval_all(0)
+  report: (callback) ->
+    callback.call @bindings, @error, @bindings
+  eval_all: (i) ->
+    if i >= @args.length
+      @return @bindings
     else
-      arg[0] (error,result) =>
-        @values.push result
-        @eval_all(callback,i+1)
+      name = @args[i]
+      val = @args[i+1]
+      @force val, (result) =>
+        @bindings[name] = result
+        @eval_all i+2
 
 # isn't functional programming great?
 wrap = (klass) ->
@@ -169,4 +177,5 @@ exports.Do = wrap(Do)
 exports.Not = wrap(Not)
 exports.Or = wrap(Or)
 exports.And = wrap(And)
+exports.Let = wrap(Let)
 
