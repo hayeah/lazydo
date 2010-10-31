@@ -8,7 +8,7 @@
 # Or
 # And
 
-# Let({a: v1, b: v2}) () -> @a == v1; @b == v2
+# Let("a",v1,"b",v2) () -> @a
 # Let(a,b,c,d) (a,b,c,d) -> ...
 
 # Do(a,b,c,d) # returns d
@@ -117,10 +117,21 @@ class Or extends LazyEval
   eval: () ->
     @value = false
     @each @args, (result) =>
+      @value = result
       if result
-        @value = result
         @break()
-    @return @value
+    @return @value unless @error?
+
+class And extends LazyEval
+  constructor: (args...) ->
+    @args = args
+    super
+  eval: () ->
+    @value = true
+    @each @args, (result) =>
+      @value = result
+      @break() if !result
+    @return @value unless @error?
 
 class Let extends LazyEval
   constructor: (@args) ->
@@ -157,4 +168,5 @@ exports.If = wrap(If)
 exports.Do = wrap(Do)
 exports.Not = wrap(Not)
 exports.Or = wrap(Or)
+exports.And = wrap(And)
 
