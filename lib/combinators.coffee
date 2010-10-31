@@ -7,6 +7,8 @@
 # If(Not(test),b,c)
 # Or
 # And
+# Call
+# Apply
 
 # Let("a",v1,"b",v2) () -> @a
 # Let(a,b,c,d) (a,b,c,d) -> ...
@@ -67,18 +69,22 @@ class LazyEval
     object? && object.lazy == secret_tag_value
   each: (args,callback,i) ->
     return(@each(args,callback,0)) unless i?
-    if i < @args.length
+    if i < args.length
       @force args[i], (result) =>
         try
           callback(result)
           @each(args,callback,i+1)
         catch e
           throw(e) unless e == loop_breaker
+  map: (args,callback) ->
+    values = []
+    @each args, (result) ->
+      values.push(result)
+    callback(values) unless @error?
   break: () ->
     throw(loop_breaker)
   eval: () ->
     # to override
-
 
 class Lazy extends LazyEval
   constructor: (@thunk) ->
@@ -155,6 +161,25 @@ class Let extends LazyEval
         @bindings[name] = result
         @eval_all i+2
 
+# apply function with a different context
+# Apply(o,"foo",1,2,3)
+# Apply(o,fn,1,2,3)
+class Apply extends LazyEval
+  constructor: (@context,@fn,@args) -> super
+  eval: () ->
+    @map [@context,@fn], (values) =>
+      [context,fn] = values
+      fn = context[fn] if typeof(fn) == 'string'
+      @map @args, (args) =>
+        value = fn.apply(context,args)
+        @force value, (result) =>
+          @return result
+
+# call function with the original context of the function
+class Call extends Apply
+  constructor: (context,fn,args...) ->
+    super(context,fn,args)
+
 # isn't functional programming great?
 wrap = (klass) ->
   (args...) ->
@@ -164,6 +189,7 @@ wrap = (klass) ->
     # of to construct a new object from a dynamically specified class
     object = new klass()
     klass.apply(object,args)
+    # object.init() # do error checking witht this
     fn = (callback) -> object.call(callback)
     fn.lazy = secret_tag_value
     fn
@@ -178,4 +204,6 @@ exports.Not = wrap(Not)
 exports.Or = wrap(Or)
 exports.And = wrap(And)
 exports.Let = wrap(Let)
+exports.Apply = wrap(Apply)
+exports.Call = wrap(Call)
 
