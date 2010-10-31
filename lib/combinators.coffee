@@ -189,13 +189,10 @@ wrap = (klass) ->
     # of to construct a new object from a dynamically specified class
     object = new klass()
     klass.apply(object,args)
-    # object.init() # do error checking witht this
+    # object.init() # TODO error checking witht this
     fn = (callback) -> object.call(callback)
     fn.lazy = secret_tag_value
     fn
-
-exports.LetObject = Lazy
-exports.LazyObject = Let
 
 exports.Lazy = wrap(Lazy)
 exports.If = wrap(If)
